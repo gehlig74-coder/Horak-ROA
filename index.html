@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Horak ROA">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect fill='%23143F8C' width='180' height='180' rx='40'/%3E%3Ctext x='90' y='120' text-anchor='middle' font-size='90' fill='white' font-family='Helvetica'%3EH%3C/text%3E%3C/svg%3E">
+<title>Horak — Advice Record</title>
+<style>
+:root{--indigo:#143F8C;--indigo07:rgba(20,63,140,0.07);--indigo45:rgba(20,63,140,0.45);--green:#34c759;--red:#ff3b30;--bg:#f2f2f7;--card:#fff;--border:#e5e5ea;--border2:#d1d1d6;--text:#1a1a1a;--text2:#6e6e73;--text3:#8e8e93;--text4:#c7c7cc;--font:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",sans-serif;}
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--text);font-size:14px;-webkit-text-size-adjust:100%;}
+.app{display:flex;height:100vh;overflow:hidden;}
+.sidebar{width:280px;min-width:280px;background:var(--bg);border-right:1px solid var(--border2);display:flex;flex-direction:column;overflow-y:auto;overflow-x:hidden;}
+.sb-brand{text-align:center;padding:14px 12px 10px;}
+.sb-brand .sub{font-size:11px;color:var(--text3);margin-top:6px;}
+.divider{height:1px;background:var(--border2);margin:0 8px;}
+.nav-items{padding-top:6px;}
+.nav-btn{display:flex;align-items:center;gap:10px;width:100%;padding:11px 14px;border:none;background:transparent;cursor:pointer;font-size:13px;font-weight:500;color:var(--text);text-align:left;font-family:var(--font);transition:background .15s;}
+.nav-btn:hover{background:rgba(20,63,140,0.04);}
+.nav-btn.active{background:var(--indigo);color:#fff;}
+.nav-btn.active .ni{color:#fff;}
+.ni{font-size:14px;width:20px;text-align:center;color:var(--indigo);}
+.completion{padding:0 16px;flex-shrink:0;}
+.comp-title{font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;padding:12px 0 6px;}
+.sr{display:flex;align-items:center;gap:10px;padding:3px 0;}
+.sr-dot{width:13px;height:13px;border-radius:50%;border:1.5px solid #ccc;display:flex;align-items:center;justify-content:center;font-size:8px;color:transparent;flex-shrink:0;transition:all .2s;}
+.sr-dot.done{background:var(--green);border-color:var(--green);color:#fff;}
+.sr-lbl{font-size:11px;color:var(--text3);transition:color .2s;}
+.sr-lbl.done{color:var(--text);}
+.init-count{display:flex;justify-content:space-between;align-items:center;padding:4px 0;}
+.init-count .l{font-size:12px;font-weight:500;}
+.init-count .vv{font-size:12px;font-weight:600;color:var(--indigo);transition:color .2s;}
+.init-count .vv.ok{color:var(--green);}
+.prog-bar{height:4px;background:#e0e0e0;border-radius:2px;overflow:hidden;margin-bottom:8px;}
+.prog-fill{height:100%;background:var(--indigo);border-radius:2px;transition:width .3s,background .3s;}
+.prog-fill.ok{background:var(--green);}
+.sb-actions{padding:12px 16px 20px;margin-top:auto;flex-shrink:0;}
+.btn-gen{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:13px;border:none;border-radius:11px;font-size:14px;font-weight:600;color:#fff;background:var(--indigo);cursor:pointer;font-family:var(--font);transition:opacity .2s;}
+.btn-gen:disabled{background:#bbb;cursor:not-allowed;}
+.btn-gen:not(:disabled):hover{opacity:.9;}
+.btn-email{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:12px;border:1px solid rgba(52,199,89,0.35);border-radius:11px;font-size:13px;font-weight:500;color:var(--green);background:rgba(52,199,89,0.12);cursor:pointer;font-family:var(--font);margin-top:10px;}
+.btn-clear{display:flex;align-items:center;justify-content:center;gap:4px;width:100%;padding:8px;border:none;background:transparent;cursor:pointer;font-size:12px;color:rgba(255,59,48,0.7);font-family:var(--font);margin-top:6px;}
+.detail{flex:1;overflow-y:auto;background:var(--bg);}
+.detail-hdr{position:sticky;top:0;z-index:10;background:rgba(242,242,247,0.92);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-bottom:1px solid var(--border2);padding:12px 20px;font-size:15px;font-weight:600;text-align:center;}
+.fc{max-width:760px;margin:0 auto;padding:16px 20px 80px;}
+.fs{background:var(--card);border-radius:10px;margin-bottom:16px;overflow:hidden;}
+.fs-hdr{font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.3px;padding:20px 16px 8px;}
+.fs-ftr{font-size:11px;color:var(--text3);padding:6px 16px 12px;}
+.fr{display:flex;align-items:center;padding:11px 16px;border-bottom:1px solid var(--border);gap:10px;}
+.fr:last-child{border-bottom:none;}
+.fr label{font-size:14px;min-width:100px;flex-shrink:0;display:flex;align-items:center;gap:8px;}
+.fr label .ic{font-size:15px;color:var(--indigo);}
+.fr input[type="text"],.fr input[type="number"]{flex:1;border:none;outline:none;font-size:14px;font-family:var(--font);text-align:right;color:var(--text);background:transparent;}
+.fr input::placeholder{color:var(--text4);}
+.fg{padding:12px 16px;border-bottom:1px solid var(--border);}
+.fg:last-child{border-bottom:none;}
+.fg-lbl{font-size:12px;font-weight:600;color:var(--text2);margin-bottom:5px;}
+.fg-ta{width:100%;min-height:60px;border:none;outline:none;font-size:14px;font-family:var(--font);resize:vertical;color:var(--text);background:transparent;line-height:1.4;}
+.fg-ta::placeholder{color:rgba(142,142,147,0.55);}
+/* Toggles - using JS-driven .on class for max compatibility */
+.tgl{position:relative;width:42px;height:26px;cursor:pointer;display:inline-block;vertical-align:middle;flex-shrink:0;}
+.tgl input{display:none;}
+.tgl-t{width:42px;height:26px;border-radius:13px;background:#e0e0e0;transition:background .2s;position:absolute;top:0;left:0;}
+.tgl input:checked+.tgl-t,.tgl-t.on{background:var(--indigo);}
+.tgl-k{width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,0.2);position:absolute;top:2px;left:2px;transition:left .2s;}
+.tgl input:checked~.tgl-k,.tgl-k.on{left:18px;}
+.mtgl{position:relative;width:34px;height:20px;cursor:pointer;display:inline-block;vertical-align:middle;flex-shrink:0;}
+.mtgl input{display:none;}
+.mtgl .tgl-t{width:34px;height:20px;border-radius:10px;}
+.mtgl .tgl-k{width:16px;height:16px;top:2px;left:2px;}
+.mtgl input:checked~.tgl-k,.mtgl .tgl-k.on{left:16px;}
+.n-hdr{display:flex;align-items:center;padding:6px 4px;margin:0 12px;background:var(--indigo07);border-radius:5px;font-size:9px;font-weight:700;}
+.n-hdr>div{text-align:center;}
+.n-row{display:flex;align-items:center;padding:4px 12px;border-bottom:1px solid var(--border);}
+.n-row:last-child{border-bottom:none;}
+.nc-p{width:36px;text-align:center;}
+.nc-l{flex:1;font-size:11px;padding:0 4px;}
+.nc-s{width:36px;text-align:center;}
+.nc-d,.nc-r{width:78px;text-align:center;}
+.nc-f{width:44px;text-align:center;}
+.n-inp{width:100%;border:1px solid var(--border2);border-radius:5px;font-size:11px;text-align:center;padding:3px 2px;font-family:var(--font);outline:none;background:#fff;}
+.n-inp:focus{border-color:var(--indigo);}
+.p-row{display:flex;gap:8px;padding:6px 16px;border-bottom:1px solid var(--border);}
+.p-row:last-child{border-bottom:none;}
+.p-inp{border:1px solid var(--border2);border-radius:6px;font-size:12px;padding:6px 8px;font-family:var(--font);outline:none;background:#fff;}
+.p-inp:focus{border-color:var(--indigo);}
+.p-inp.nm{width:180px;flex-shrink:0;}
+.p-inp.mo{flex:1;}
+.d-note{font-size:12px;font-style:italic;color:var(--text2);padding:8px 16px;border-bottom:1px solid var(--border);}
+.d-item{display:flex;align-items:flex-start;gap:14px;padding:12px 16px;border-bottom:1px solid var(--border);}
+.d-item:last-child{border-bottom:none;}
+.d-txt{flex:1;}
+.d-num{font-size:12px;font-weight:700;color:var(--indigo);min-width:18px;}
+.d-con{font-size:12px;line-height:1.45;white-space:pre-line;}
+.ib{flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:3px;}
+.ib-wrap{width:90px;height:56px;border-radius:6px;border:1.5px solid var(--indigo45);background:#fff;position:relative;overflow:hidden;cursor:crosshair;touch-action:none;}
+.ib-wrap canvas{width:100%;height:100%;display:block;}
+.ib-ph{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;pointer-events:none;opacity:.4;}
+.ib-ph .i{font-size:14px;color:var(--indigo);opacity:.35;margin-bottom:2px;}
+.ib-ph .t{font-size:8px;color:#888;}
+.ib-clr{font-size:8px;color:rgba(255,59,48,0.7);cursor:pointer;background:none;border:none;font-family:var(--font);display:none;}
+.ib-clr.vis{display:block;}
+.sig-sec{padding:12px 16px;border-bottom:1px solid var(--border);}
+.sig-sec:last-child{border-bottom:none;}
+.sig-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;}
+.sig-lbl{font-size:10px;font-weight:600;color:var(--text2);text-transform:uppercase;}
+.sig-clr{font-size:10px;color:rgba(255,59,48,0.8);cursor:pointer;background:none;border:none;font-family:var(--font);display:none;}
+.sig-clr.vis{display:block;}
+.sig-wrap{width:100%;height:120px;border-radius:8px;border:1.5px solid rgba(20,63,140,0.4);background:#fff;position:relative;overflow:hidden;cursor:crosshair;touch-action:none;}
+.sig-wrap canvas{width:100%;height:100%;display:block;}
+.sig-ph{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;pointer-events:none;opacity:.35;}
+.sig-ph .i{font-size:26px;color:var(--indigo);opacity:.3;margin-bottom:4px;}
+.sig-ph .t{font-size:11px;color:#888;}
+.dr{display:flex;align-items:center;gap:10px;padding:11px 16px;border-bottom:1px solid var(--border);}
+.dr:last-child{border-bottom:none;}
+.dr label{font-size:14px;flex-shrink:0;}
+.dr input[type="date"]{flex:1;border:none;outline:none;font-size:14px;font-family:var(--font);text-align:right;color:var(--indigo);background:transparent;cursor:pointer;}
+.brand{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;}
+.brand-title{font-size:20px;font-weight:700;color:var(--indigo);}
+.brand-sub{font-size:11px;color:var(--text3);}
+.modal{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.35);z-index:1000;display:none;align-items:center;justify-content:center;}
+.modal.show{display:flex;}
+.modal-box{background:#fff;border-radius:14px;padding:24px;width:300px;text-align:center;box-shadow:0 10px 40px rgba(0,0,0,0.2);}
+.modal-box h3{font-size:16px;margin-bottom:8px;}
+.modal-box p{font-size:13px;color:#666;margin-bottom:16px;line-height:1.5;}
+.modal-box button{padding:8px 24px;border:none;border-radius:8px;background:var(--indigo);color:#fff;font-size:14px;font-weight:600;cursor:pointer;font-family:var(--font);}
+/* Mobile */
+.mob-bar{display:none;}
+@media(max-width:900px){
+  .sidebar{display:none;}
+  .mob-bar{display:flex;position:fixed;bottom:0;left:0;right:0;z-index:100;background:var(--bg);border-top:1px solid var(--border2);padding:0;}
+  .mob-bar .nav-btn{flex:1;justify-content:center;padding:8px;font-size:11px;flex-direction:column;gap:2px;text-align:center;}
+  .mob-bar .ni{font-size:18px;}
+  .mob-actions{display:flex!important;padding:12px 16px;gap:10px;flex-wrap:wrap;}
+  .mob-actions .btn-gen,.mob-actions .btn-email{font-size:13px;padding:11px;flex:1;min-width:140px;}
+  .fc{padding-bottom:160px;}
+}
+.mob-actions{display:none;}
+/* Print - shows a clean printable version */
+@media print{
+  .sidebar,.mob-bar,.mob-actions,.detail-hdr,.modal,.no-print{display:none!important;}
+  .app{display:block!important;height:auto!important;}
+  .detail{overflow:visible!important;height:auto!important;}
+  #pg0,#pg1{display:block!important;}
+  .fc{max-width:100%!important;padding:8px!important;}
+  .fs{break-inside:avoid;box-shadow:none!important;border:1px solid #ddd!important;margin-bottom:8px!important;}
+  .fs-hdr{padding:12px 12px 4px!important;}
+  body{background:#fff!important;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}
+  .tgl-t,.tgl-t.on,.sr-dot,.prog-fill,.n-hdr,.brand-title{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}
+  canvas{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="sidebar">
+    <div class="sb-brand"><div id="sidebarLogo"></div><div class="divider" style="margin:8px 0 0"></div><div class="sub">Advice Record Generator</div></div>
+    <div class="divider"></div>
+    <div class="nav-items">
+      <button class="nav-btn active" onclick="goPage(0)" id="nb0"><span class="ni">📄</span> Page 1 — Form</button>
+      <div class="divider"></div>
+      <button class="nav-btn" onclick="goPage(1)" id="nb1"><span class="ni">✍️</span> Page 2 — Declarations</button>
+      <div class="divider"></div>
+    </div>
+    <div class="divider" style="margin-top:6px"></div>
+    <div class="completion">
+      <div class="comp-title">COMPLETION</div>
+      <div class="sr"><div class="sr-dot" id="sd-name">✓</div><div class="sr-lbl" id="sl-name">Client Name</div></div>
+      <div class="sr"><div class="sr-dot" id="sd-id">✓</div><div class="sr-lbl" id="sl-id">ID Number</div></div>
+      <div class="sr"><div class="sr-dot" id="sd-secA">✓</div><div class="sr-lbl" id="sl-secA">Section A</div></div>
+      <div class="sr"><div class="sr-dot" id="sd-secD">✓</div><div class="sr-lbl" id="sl-secD">Section D</div></div>
+      <div class="sr"><div class="sr-dot" id="sd-init">✓</div><div class="sr-lbl" id="sl-init">11 Initials</div></div>
+      <div class="sr"><div class="sr-dot" id="sd-csig">✓</div><div class="sr-lbl" id="sl-csig">Client Signature</div></div>
+      <div class="sr"><div class="sr-dot" id="sd-asig">✓</div><div class="sr-lbl" id="sl-asig">Advisor Signature</div></div>
+      <div class="divider" style="margin:8px 0"></div>
+      <div class="init-count"><span class="l">Initials</span><span class="vv" id="icnt">0/11</span></div>
+      <div class="prog-bar"><div class="prog-fill" id="iprog" style="width:0%"></div></div>
+    </div>
+    <div class="sb-actions">
+      <button class="btn-gen" id="btnGen" onclick="generatePDF()">📑 Generate PDF</button>
+      <button class="btn-email" onclick="emailPDF()">📤 Share / Email PDF</button>
+      <button class="btn-clear" onclick="clearAll()">🗑 Clear All</button>
+    </div>
+  </div>
+  <div class="detail">
+    <div id="pg0">
+      <div class="detail-hdr">Page 1 — Advice Record</div>
+      <div class="fc">
+        <div class="fs"><div class="brand"><div><div class="brand-title">ADVICE RECORD</div><div class="brand-sub">Record of Financial Advice</div></div><div id="mainLogo"></div></div></div>
+        <div class="fs-hdr">1. PARTICULARS OF THE CLIENT</div>
+        <div class="fs">
+          <div class="fr"><label><span class="ic">👤</span> Full Name</label><input type="text" id="fN" placeholder="Full name, initials and surname" oninput="sync()"></div>
+          <div class="fr"><label><span class="ic">💳</span> ID Number</label><input type="text" id="fI" placeholder="13-digit ID" maxlength="13" inputmode="numeric" oninput="sync()"></div>
+        </div>
+        <div class="fs-hdr">SECTION A: Summary of Information Obtained from the Client</div>
+        <div class="fs">
+          <div class="fg"><div class="fg-lbl">Clients Objectives</div><textarea class="fg-ta" id="fO" placeholder="What does the client wish to achieve by purchasing this financial product?" oninput="sync()"></textarea></div>
+          <div class="fg"><div class="fg-lbl">Financial Situation</div><textarea class="fg-ta" id="fFS" placeholder="Set out in summary the client's current financial position."></textarea></div>
+          <div class="fg"><div class="fg-lbl">Current Product Experience</div><textarea class="fg-ta" id="fPE" placeholder="Describe the client's level of knowledge and experience of the product purchased."></textarea></div>
+        </div>
+        <div class="fs-hdr">SECTION B: Needs to Be Identified</div>
+        <div class="fs"><div class="n-hdr"><div style="width:36px">Pri.</div><div style="flex:1;text-align:left;padding-left:4px">Need</div><div style="width:36px">Sel.</div><div style="width:78px">Deficit (R)</div><div style="width:78px">Rec. (R)</div><div style="width:44px">FNA?</div></div><div id="nC"></div></div>
+        <div class="fs-hdr">Section C: Products Considered</div>
+        <div class="fs">
+          <div class="fr"><input type="text" id="pc0" placeholder="Product / fund 1" style="text-align:left"></div>
+          <div class="fr"><input type="text" id="pc1" placeholder="Product / fund 2" style="text-align:left"></div>
+          <div class="fr"><input type="text" id="pc2" placeholder="Product / fund 3" style="text-align:left"></div>
+        </div>
+        <div class="fs-ftr">List products for which quotes / fund fact sheets have been obtained.</div>
+        <div class="fs-hdr">Section D: Initial Recommendation / Advice & Motivation</div>
+        <div class="fs" id="pDC"></div>
+        <div class="fs-ftr">Ensure all needs identified in Section B are addressed.</div>
+        <div class="mob-actions">
+          <button class="btn-gen" onclick="generatePDF()">📑 Generate PDF</button>
+          <button class="btn-email" onclick="emailPDF()">📤 Email</button>
+        </div>
+      </div>
+    </div>
+    <div id="pg1" style="display:none">
+      <div class="detail-hdr">Page 2 — Declarations & Signatures</div>
+      <div class="fc">
+        <div class="fs-hdr">Section E: Important Information Highlighted to Client</div>
+        <div class="fs"><div class="fg"><textarea class="fg-ta" id="fIm" placeholder="e.g. risks, tax implications, liquidity, legislative restrictions, exclusions, consequences of replacement etc." style="min-height:80px"></textarea></div></div>
+        <div class="fs-hdr">Section F: Financial Adviser's Declaration</div>
+        <div class="fs">
+          <div class="fg"><div class="fg-lbl">Products client elected NOT to accept:</div><input type="text" class="p-inp" style="width:100%;margin-top:4px" id="fDP" placeholder="Product names"></div>
+          <div class="fg"><div class="fg-lbl">Reasons for declining:</div><input type="text" class="p-inp" style="width:100%;margin-top:4px" id="fDR" placeholder="Reasons"></div>
+          <div class="fr"><label style="flex:1">Consequences clearly explained to client</label><label class="tgl"><input type="checkbox" id="fCo"><div class="tgl-t"></div><div class="tgl-k"></div></label></div>
+          <div class="fr"><label style="flex:1">Financial Needs Analysis was completed</label><label class="tgl"><input type="checkbox" id="fFA" checked><div class="tgl-t"></div><div class="tgl-k"></div></label></div>
+          <div class="fr" id="fRw" style="display:none"><input type="text" id="fFR" placeholder="Reason FNA was not done" style="text-align:left;flex:1"></div>
+        </div>
+        <div class="fs-hdr">Section G: Client Declaration (Initial each point)</div>
+        <div class="fs"><div class="d-note">Please read each point carefully and initial the box alongside each item to confirm acceptance.</div><div id="dC"></div></div>
+        <div class="fs-hdr">Financial Advisor Signature</div>
+        <div class="fs">
+          <div class="sig-sec"><div class="sig-hdr"><span class="sig-lbl">Financial Advisor Signature</span><button class="sig-clr" id="aSX" onclick="clrSig('a')">Clear</button></div><div class="sig-wrap"><canvas id="aS"></canvas><div class="sig-ph" id="aSP"><div class="i">✍️</div><div class="t">Sign here with finger or Apple Pencil</div></div></div></div>
+          <div class="dr"><label>Advisor Date</label><input type="date" id="fAD"></div>
+        </div>
+        <div class="fs-hdr">Client Signature</div>
+        <div class="fs">
+          <div class="sig-sec"><div class="sig-hdr"><span class="sig-lbl">Client Signature</span><button class="sig-clr" id="cSX" onclick="clrSig('c')">Clear</button></div><div class="sig-wrap"><canvas id="cS"></canvas><div class="sig-ph" id="cSP"><div class="i">✍️</div><div class="t">Sign here with finger or Apple Pencil</div></div></div></div>
+          <div class="dr"><label>Client Date</label><input type="date" id="fCD"></div>
+        </div>
+        <div class="mob-actions">
+          <button class="btn-gen" onclick="generatePDF()">📑 Generate PDF</button>
+          <button class="btn-email" onclick="emailPDF()">📤 Email</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="mob-bar">
+  <button class="nav-btn active" onclick="goPage(0)" id="mb0"><span class="ni">📄</span>Page 1</button>
+  <button class="nav-btn" onclick="goPage(1)" id="mb1"><span class="ni">✍️</span>Page 2</button>
+</div>
+<div class="modal" id="vM"><div class="modal-box"><h3>Required Fields Missing</h3><p>Please enter at least the Client Name and ID Number before generating the PDF.</p><button onclick="document.getElementById('vM').classList.remove('show')">OK</button></div></div>
+
+<script>
+var NEEDS=["DEATH","SICKNESS","CRITICAL ILLNESS","DISABILITY","FOR RETIREMENT","AT RETIREMENT","SAVINGS","BUSINESS ASSURANCE","OTHER (e.g. investments)"];
+var DECL=["I confirm that a Contact Stage Disclosure letter, setting out the Financial Advisor's full particulars, his experience and services offered, has been provided to me.","I confirm that I required the Financial Advisor to render the financial services set out in the Service Level Agreement, a copy of which have been provided to me.","Where I elected not to take up the Financial Advisor's recommendation of a Full Financial Needs Analysis, I was advised and understand that I should take particular care to consider whether and ensure that the product(s) purchased or selected by me is/are appropriate to my specific needs, objectives and financial circumstances.","If I did not provide the Financial Advisor with all information requested, or there was insufficient time to conduct an analysis, I confirm that: a. I clearly understand that there may be limitations on the appropriateness of the advice provided, and b. I will take particular care to consider on my own whether the advice is appropriate considering my own financial objectives and current financial position.","I understand that the accuracy of a Needs Analysis is dependent on the information provided to or obtained by the Financial Advisor. The advice furnished and product recommendations made by the Financial Advisor are based largely on the information I provided to the Financial Advisor. I understand that material non-disclosures and misrepresentations could result in inappropriate product(s) being recommended and purchased by me.","I confirm that I was provided with copies of quote(s), fund fact-sheet, prospectus, marketing brochures and rates and benefit sheets (in case of a medical aid) for the product(s) selected. All material terms and conditions of the product(s) selected were explained to me prior to any decision made.","I have been informed of and understand all costs, charges, penalties, liquidity limitations and tax implications where applicable. I understand the risks / guarantees (or absence thereof) associated with the product(s) and/or underlying fund(s) selected.","I confirm that all documents signed by me were fully completed prior to my signing them.","I confirm that where I provided the Financial Advisor with the information required for any risk benefit application forms on my behalf, the Financial Advisor warned me orally of the risks and consequences of non-disclosure and misrepresentation of such information.","I confirm that the Financial Advisor has made enquiries to ascertain whether the product(s) selected are intended to replace any existing financial products held by me and where applicable, has informed me of the financial implications, costs and consequences of replacement.","Notwithstanding the information provided by the Advisor I acknowledge that I have an obligation to familiarize myself with the terms and conditions of the product(s) that I have purchased."];
+
+function logoSVG(h){var w=Math.round(200*(h/52));return '<svg width="'+w+'" height="'+h+'" viewBox="0 0 200 52" xmlns="http://www.w3.org/2000/svg"><text x="8" y="34" font-family="-apple-system,Helvetica Neue,sans-serif" font-size="32" font-weight="300" fill="#999">H</text><defs><radialGradient id="sg'+h+'" cx="38%" cy="30%" r="50%"><stop offset="0%" stop-color="#fff" stop-opacity=".9"/><stop offset="45%" stop-color="#6bb8f2"/><stop offset="100%" stop-color="#2e81d9"/></radialGradient><linearGradient id="tg'+h+'" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#a6e1ff"/><stop offset="100%" stop-color="#2e85e0"/></linearGradient></defs><circle cx="55" cy="22" r="13" fill="url(#sg'+h+')" style="filter:drop-shadow(0 1px 2px rgba(0,0,0,.12))"/><text x="74" y="34" font-family="-apple-system,Helvetica Neue,sans-serif" font-size="32" font-weight="300" fill="#999">R</text><polygon points="118,6 132,38 104,38" fill="url(#tg'+h+')"/><polygon points="118,6 111,21 125,21" fill="rgba(255,255,255,.35)"/><text x="137" y="34" font-family="-apple-system,Helvetica Neue,sans-serif" font-size="32" font-weight="300" fill="#999">K</text><line x1="8" y1="40" x2="162" y2="40" stroke="#a6a6a6" stroke-width=".7"/><text x="85" y="49" text-anchor="middle" font-family="-apple-system,Helvetica Neue,sans-serif" font-size="7" letter-spacing="1.5" fill="#8c8c8c">INSURANCE BROKERS</text></svg>';}
+
+// Drawing
+var iL=[];var cL=[],aL=[];
+function initDraw(cv,lines,idx,phId,clrId){
+  var ctx=cv.getContext('2d');var on=false,cur=[];
+  function p(e){var r=cv.getBoundingClientRect(),sx=cv.width/r.width,sy=cv.height/r.height;var cx=e.touches?e.touches[0].clientX:e.clientX,cy=e.touches?e.touches[0].clientY:e.clientY;return{x:(cx-r.left)*sx,y:(cy-r.top)*sy};}
+  function d(){ctx.clearRect(0,0,cv.width,cv.height);ctx.strokeStyle='#000';ctx.lineWidth=2;ctx.lineCap='round';ctx.lineJoin='round';var all=lines[idx].concat(cur.length>1?[cur]:[]);for(var i=0;i<all.length;i++){var l=all[i];if(l.length<2)continue;ctx.beginPath();ctx.moveTo(l[0].x,l[0].y);for(var k=1;k<l.length;k++)ctx.lineTo(l[k].x,l[k].y);ctx.stroke();}}
+  function s(e){e.preventDefault();on=true;cur=[p(e)];}
+  function m(e){if(!on)return;e.preventDefault();cur.push(p(e));d();}
+  function u(){if(!on)return;on=false;if(cur.length>0){lines[idx].push(cur.slice());cur=[];}d();var has=lines[idx].length>0;if(phId)document.getElementById(phId).style.display=has?'none':'';if(clrId)document.getElementById(clrId).classList.toggle('vis',has);sync();}
+  cv.addEventListener('mousedown',s);cv.addEventListener('mousemove',m);cv.addEventListener('mouseup',u);cv.addEventListener('mouseleave',u);
+  cv.addEventListener('touchstart',s,{passive:false});cv.addEventListener('touchmove',m,{passive:false});cv.addEventListener('touchend',u);
+}
+function clrInit(i){iL[i]=[];var c=document.getElementById('ic'+i);c.getContext('2d').clearRect(0,0,c.width,c.height);document.getElementById('iph'+i).style.display='';document.getElementById('iclr'+i).classList.remove('vis');sync();}
+function clrSig(t){
+  if(t==='c'){cL.length=0;cL=[];var c=document.getElementById('cS');c.getContext('2d').clearRect(0,0,c.width,c.height);document.getElementById('cSP').style.display='';document.getElementById('cSX').classList.remove('vis');}
+  else{aL.length=0;aL=[];var c=document.getElementById('aS');c.getContext('2d').clearRect(0,0,c.width,c.height);document.getElementById('aSP').style.display='';document.getElementById('aSX').classList.remove('vis');}
+  sync();
+}
+
+// Build UI
+function buildNeeds(){var c=document.getElementById('nC');NEEDS.forEach(function(lb,i){var o=lb.indexOf('OTHER')>=0;var r=document.createElement('div');r.className='n-row';r.innerHTML='<div class="nc-p"><input class="n-inp" id="np'+i+'" maxlength="2"></div><div class="nc-l">'+lb+'</div><div class="nc-s"><label class="mtgl"><input type="checkbox" id="ns'+i+'"><div class="tgl-t"></div><div class="tgl-k"></div></label></div>'+(o?'<div style="width:156px"></div>':'<div class="nc-d"><input class="n-inp" id="nd'+i+'" placeholder="0" inputmode="decimal"></div><div class="nc-r"><input class="n-inp" id="nr'+i+'" placeholder="0" inputmode="decimal"></div>')+'<div class="nc-f"><label class="mtgl"><input type="checkbox" id="nf'+i+'"><div class="tgl-t"></div><div class="tgl-k"></div></label></div>';c.appendChild(r);});}
+function buildProds(){var c=document.getElementById('pDC');for(var i=0;i<5;i++){var r=document.createElement('div');r.className='p-row';r.innerHTML='<input class="p-inp nm" id="pd'+i+'" placeholder="Product / Fund" oninput="sync()"><input class="p-inp mo" id="pm'+i+'" placeholder="Motivation (charges, affordability, track record...)">';c.appendChild(r);}}
+function buildDecl(){var c=document.getElementById('dC');DECL.forEach(function(t,i){iL[i]=[];var d=document.createElement('div');d.className='d-item';d.innerHTML='<div class="d-txt"><span class="d-num">'+(i+1)+'.</span> <span class="d-con">'+t+'</span></div><div class="ib"><div class="ib-wrap"><canvas id="ic'+i+'" width="180" height="112"></canvas><div class="ib-ph" id="iph'+i+'"><div class="i">✍️</div><div class="t">Initial here</div></div></div><button class="ib-clr" id="iclr'+i+'" onclick="clrInit('+i+')">Clear</button></div>';c.appendChild(d);setTimeout(function(idx){return function(){initDraw(document.getElementById('ic'+idx),iL,idx,'iph'+idx,'iclr'+idx);};}(i),0);});}
+
+// Toggle handler - JS driven for maximum compatibility
+function setupToggles(){
+  document.addEventListener('click',function(e){
+    var label=e.target.closest('.tgl,.mtgl');
+    if(!label)return;
+    var inp=label.querySelector('input');
+    if(!inp)return;
+    setTimeout(function(){
+      var track=label.querySelector('.tgl-t');
+      var thumb=label.querySelector('.tgl-k');
+      if(track){if(inp.checked)track.classList.add('on');else track.classList.remove('on');}
+      if(thumb){if(inp.checked)thumb.classList.add('on');else thumb.classList.remove('on');}
+      // Handle FNA toggle
+      if(inp.id==='fFA'){document.getElementById('fRw').style.display=inp.checked?'none':'flex';}
+    },20);
+  });
+}
+
+// Nav
+function goPage(n){document.getElementById('pg0').style.display=n===0?'':'none';document.getElementById('pg1').style.display=n===1?'':'none';['nb0','nb1','mb0','mb1'].forEach(function(id){var e=document.getElementById(id);if(e)e.classList.toggle('active',id.charAt(id.length-1)===String(n));});}
+
+// Status
+function sync(){
+  var name=gv('fN'),id=gv('fI'),obj=gv('fO'),pd0=gv('pd0');
+  var ic=iL.filter(function(l){return l.length>0;}).length,cs=cL.length>0,as=aL.length>0;
+  ss('name',!!name);ss('id',!!id);ss('secA',!!obj);ss('secD',!!pd0);ss('init',ic===11);ss('csig',cs);ss('asig',as);
+  document.getElementById('icnt').textContent=ic+'/11';document.getElementById('icnt').className='vv'+(ic===11?' ok':'');
+  var bar=document.getElementById('iprog');bar.style.width=(ic/11*100)+'%';bar.className='prog-fill'+(ic===11?' ok':'');
+  var valid=!!name&&!!id;document.getElementById('btnGen').disabled=!valid;
+}
+function gv(id){var e=document.getElementById(id);return e?e.value.trim():'';}
+function ss(k,d){document.getElementById('sd-'+k).className='sr-dot'+(d?' done':'');document.getElementById('sl-'+k).className='sr-lbl'+(d?' done':'');}
+
+// PDF Generation - uses window.print() which works in Safari on iPad
+// Safari print dialog has "Save as PDF" option built in
+function generatePDF(){
+  var name=gv('fN'),id=gv('fI');
+  if(!name||!id){document.getElementById('vM').classList.add('show');return;}
+  // Show both pages for printing
+  document.getElementById('pg0').style.display='';
+  document.getElementById('pg1').style.display='';
+  // Small delay then print
+  setTimeout(function(){window.print();},200);
+}
+
+// Email
+function emailPDF(){
+  var name=gv('fN')||'Client';
+  var subj=encodeURIComponent('Advice Record - '+name);
+  var body=encodeURIComponent('Please find attached the Record of Advice for '+name+'.\n\nGenerated by Horak Insurance Brokers.\n\nPlease use the Generate PDF button first to save the form as a PDF, then attach it to this email.');
+  window.location.href='mailto:?subject='+subj+'&body='+body;
+}
+
+// Clear
+function clearAll(){
+  if(!confirm('Clear all form data, signatures, and initials?'))return;
+  ['fN','fI','fO','fFS','fPE','fIm','fDP','fDR','fFR'].forEach(function(id){var e=document.getElementById(id);if(e)e.value='';});
+  document.getElementById('fCo').checked=false;document.getElementById('fFA').checked=true;document.getElementById('fRw').style.display='none';
+  NEEDS.forEach(function(_,i){['np','ns','nd','nr','nf'].forEach(function(p){var e=document.getElementById(p+i);if(e){if(e.type==='checkbox')e.checked=false;else e.value='';}});});
+  for(var i=0;i<3;i++)document.getElementById('pc'+i).value='';
+  for(var i=0;i<5;i++){document.getElementById('pd'+i).value='';document.getElementById('pm'+i).value='';}
+  for(var i=0;i<11;i++)clrInit(i);clrSig('c');clrSig('a');
+  var td=new Date().toISOString().split('T')[0];document.getElementById('fCD').value=td;document.getElementById('fAD').value=td;
+  // Reset all toggle visuals
+  document.querySelectorAll('.tgl-t,.tgl-k').forEach(function(el){el.classList.remove('on');});
+  var ffa=document.getElementById('fFA');
+  ffa.parentElement.querySelector('.tgl-t').classList.add('on');
+  ffa.parentElement.querySelector('.tgl-k').classList.add('on');
+  sync();goPage(0);
+}
+
+// Init
+document.addEventListener('DOMContentLoaded',function(){
+  document.getElementById('sidebarLogo').innerHTML=logoSVG(38);
+  document.getElementById('mainLogo').innerHTML=logoSVG(44);
+  var td=new Date().toISOString().split('T')[0];document.getElementById('fCD').value=td;document.getElementById('fAD').value=td;
+  buildNeeds();buildProds();buildDecl();
+  setupToggles();
+  // Set FNA default toggle visual
+  var ffa=document.getElementById('fFA');
+  if(ffa&&ffa.parentElement){ffa.parentElement.querySelector('.tgl-t').classList.add('on');ffa.parentElement.querySelector('.tgl-k').classList.add('on');}
+  // Sig pads
+  var cc=document.getElementById('cS');cc.width=480;cc.height=240;
+  var ac=document.getElementById('aS');ac.width=480;ac.height=240;
+  (function(cv){var ctx=cv.getContext('2d');var on=false,cur=[];
+    function p(e){var r=cv.getBoundingClientRect(),sx=cv.width/r.width,sy=cv.height/r.height;var cx=e.touches?e.touches[0].clientX:e.clientX,cy=e.touches?e.touches[0].clientY:e.clientY;return{x:(cx-r.left)*sx,y:(cy-r.top)*sy};}
+    function d(){ctx.clearRect(0,0,cv.width,cv.height);ctx.strokeStyle='#000';ctx.lineWidth=2;ctx.lineCap='round';ctx.lineJoin='round';var all=cL.concat(cur.length>1?[cur]:[]);for(var i=0;i<all.length;i++){var l=all[i];if(l.length<2)continue;ctx.beginPath();ctx.moveTo(l[0].x,l[0].y);for(var k=1;k<l.length;k++)ctx.lineTo(l[k].x,l[k].y);ctx.stroke();}}
+    function s(e){e.preventDefault();on=true;cur=[p(e)];}function m(e){if(!on)return;e.preventDefault();cur.push(p(e));d();}
+    function u(){if(!on)return;on=false;if(cur.length>0){cL.push(cur.slice());cur=[];}d();document.getElementById('cSP').style.display=cL.length>0?'none':'';document.getElementById('cSX').classList.toggle('vis',cL.length>0);sync();}
+    cv.addEventListener('mousedown',s);cv.addEventListener('mousemove',m);cv.addEventListener('mouseup',u);cv.addEventListener('mouseleave',u);
+    cv.addEventListener('touchstart',s,{passive:false});cv.addEventListener('touchmove',m,{passive:false});cv.addEventListener('touchend',u);
+  })(cc);
+  (function(cv){var ctx=cv.getContext('2d');var on=false,cur=[];
+    function p(e){var r=cv.getBoundingClientRect(),sx=cv.width/r.width,sy=cv.height/r.height;var cx=e.touches?e.touches[0].clientX:e.clientX,cy=e.touches?e.touches[0].clientY:e.clientY;return{x:(cx-r.left)*sx,y:(cy-r.top)*sy};}
+    function d(){ctx.clearRect(0,0,cv.width,cv.height);ctx.strokeStyle='#000';ctx.lineWidth=2;ctx.lineCap='round';ctx.lineJoin='round';var all=aL.concat(cur.length>1?[cur]:[]);for(var i=0;i<all.length;i++){var l=all[i];if(l.length<2)continue;ctx.beginPath();ctx.moveTo(l[0].x,l[0].y);for(var k=1;k<l.length;k++)ctx.lineTo(l[k].x,l[k].y);ctx.stroke();}}
+    function s(e){e.preventDefault();on=true;cur=[p(e)];}function m(e){if(!on)return;e.preventDefault();cur.push(p(e));d();}
+    function u(){if(!on)return;on=false;if(cur.length>0){aL.push(cur.slice());cur=[];}d();document.getElementById('aSP').style.display=aL.length>0?'none':'';document.getElementById('aSX').classList.toggle('vis',aL.length>0);sync();}
+    cv.addEventListener('mousedown',s);cv.addEventListener('mousemove',m);cv.addEventListener('mouseup',u);cv.addEventListener('mouseleave',u);
+    cv.addEventListener('touchstart',s,{passive:false});cv.addEventListener('touchmove',m,{passive:false});cv.addEventListener('touchend',u);
+  })(ac);
+  sync();
+});
+</script>
+</body>
+</html>
