@@ -329,8 +329,15 @@ function generatePDF(){
   // Show both pages for printing
   document.getElementById('pg0').style.display='';
   document.getElementById('pg1').style.display='';
+  // Set page title to client name — Safari uses this as the default filename when saving
+  var originalTitle=document.title;
+  document.title=name+' - Horak Advice Record';
   // Small delay then print
-  setTimeout(function(){window.print();},200);
+  setTimeout(function(){
+    window.print();
+    // Restore original title after print dialog closes
+    setTimeout(function(){document.title=originalTitle;},1000);
+  },200);
 }
 
 // Email
