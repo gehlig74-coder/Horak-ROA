@@ -96,20 +96,24 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
 .d-num{font-size:12px;font-weight:700;color:var(--indigo);min-width:18px;}
 .d-con{font-size:12px;line-height:1.45;white-space:pre-line;}
 .ib{flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:3px;}
-.ib-wrap{width:90px;height:56px;border-radius:6px;border:1.5px solid var(--indigo45);background:#fff;position:relative;overflow:hidden;cursor:crosshair;touch-action:none;}
+.ib-wrap{width:90px;height:56px;border-radius:6px;border:1.5px solid var(--indigo45);background:#fff;position:relative;overflow:hidden;cursor:crosshair;touch-action:none;transition:width .3s ease,height .3s ease,box-shadow .3s ease;}
+.ib-wrap.expanded{width:280px;height:160px;box-shadow:0 4px 20px rgba(20,63,140,0.25);border-width:2px;z-index:50;}
 .ib-wrap canvas{width:100%;height:100%;display:block;}
 .ib-ph{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;pointer-events:none;opacity:.4;}
 .ib-ph .i{font-size:14px;color:var(--indigo);opacity:.35;margin-bottom:2px;}
 .ib-ph .t{font-size:8px;color:#888;}
 .ib-clr{font-size:8px;color:rgba(255,59,48,0.7);cursor:pointer;background:none;border:none;font-family:var(--font);display:none;}
 .ib-clr.vis{display:block;}
+.ib-done-btn{display:none;margin-top:4px;padding:6px 16px;border:none;border-radius:6px;background:var(--green);color:#fff;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--font);}
+.ib-done-btn.vis{display:block;}
 .sig-sec{padding:12px 16px;border-bottom:1px solid var(--border);}
 .sig-sec:last-child{border-bottom:none;}
 .sig-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;}
 .sig-lbl{font-size:10px;font-weight:600;color:var(--text2);text-transform:uppercase;}
 .sig-clr{font-size:10px;color:rgba(255,59,48,0.8);cursor:pointer;background:none;border:none;font-family:var(--font);display:none;}
 .sig-clr.vis{display:block;}
-.sig-wrap{width:100%;height:120px;border-radius:8px;border:1.5px solid rgba(20,63,140,0.4);background:#fff;position:relative;overflow:hidden;cursor:crosshair;touch-action:none;}
+.sig-wrap{width:100%;height:120px;border-radius:8px;border:1.5px solid rgba(20,63,140,0.4);background:#fff;position:relative;overflow:hidden;cursor:crosshair;touch-action:none;transition:height .3s ease,box-shadow .3s ease;}
+.sig-wrap.expanded{height:220px;box-shadow:0 4px 20px rgba(20,63,140,0.25);border-width:2px;}
 .sig-wrap canvas{width:100%;height:100%;display:block;}
 .sig-ph{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;pointer-events:none;opacity:.35;}
 .sig-ph .i{font-size:26px;color:var(--indigo);opacity:.3;margin-bottom:4px;}
@@ -285,7 +289,101 @@ function clrSig(t){
 // Build UI
 function buildNeeds(){var c=document.getElementById('nC');NEEDS.forEach(function(lb,i){var o=lb.indexOf('OTHER')>=0;var r=document.createElement('div');r.className='n-row';r.innerHTML='<div class="nc-p"><input class="n-inp" id="np'+i+'" maxlength="2"></div><div class="nc-l">'+lb+'</div><div class="nc-s"><label class="mtgl"><input type="checkbox" id="ns'+i+'"><div class="tgl-t"></div><div class="tgl-k"></div></label></div>'+(o?'<div style="width:156px"></div>':'<div class="nc-d"><input class="n-inp" id="nd'+i+'" placeholder="0" inputmode="decimal"></div><div class="nc-r"><input class="n-inp" id="nr'+i+'" placeholder="0" inputmode="decimal"></div>')+'<div class="nc-f"><label class="mtgl"><input type="checkbox" id="nf'+i+'"><div class="tgl-t"></div><div class="tgl-k"></div></label></div>';c.appendChild(r);});}
 function buildProds(){var c=document.getElementById('pDC');for(var i=0;i<5;i++){var r=document.createElement('div');r.className='p-row';r.innerHTML='<input class="p-inp nm" id="pd'+i+'" placeholder="Product / Fund" oninput="sync()"><input class="p-inp mo" id="pm'+i+'" placeholder="Motivation (charges, affordability, track record...)">';c.appendChild(r);}}
-function buildDecl(){var c=document.getElementById('dC');DECL.forEach(function(t,i){iL[i]=[];var d=document.createElement('div');d.className='d-item';d.innerHTML='<div class="d-txt"><span class="d-num">'+(i+1)+'.</span> <span class="d-con">'+t+'</span></div><div class="ib"><div class="ib-wrap"><canvas id="ic'+i+'" width="180" height="112"></canvas><div class="ib-ph" id="iph'+i+'"><div class="i">✍️</div><div class="t">Initial here</div></div></div><button class="ib-clr" id="iclr'+i+'" onclick="clrInit('+i+')">Clear</button></div>';c.appendChild(d);setTimeout(function(idx){return function(){initDraw(document.getElementById('ic'+idx),iL,idx,'iph'+idx,'iclr'+idx);};}(i),0);});}
+function buildDecl(){var c=document.getElementById('dC');DECL.forEach(function(t,i){iL[i]=[];var d=document.createElement('div');d.className='d-item';
+  var phText=i===0?'Tap to initial (applies to all)':'';
+  d.innerHTML='<div class="d-txt"><span class="d-num">'+(i+1)+'.</span> <span class="d-con">'+t+'</span></div><div class="ib"><div class="ib-wrap" id="iw'+i+'"><canvas id="ic'+i+'" width="180" height="112"></canvas><div class="ib-ph" id="iph'+i+'"><div class="i">✍️</div><div class="t">'+(i===0?'Tap to initial':'Initial here')+'</div></div></div><button class="ib-done-btn" id="idone'+i+'" onclick="doneInitial('+i+')">✓ Done — Apply to All</button><button class="ib-clr" id="iclr'+i+'" onclick="clrInit('+i+')">Clear</button></div>';
+  c.appendChild(d);
+  setTimeout(function(idx){return function(){
+    var canvas=document.getElementById('ic'+idx);
+    var wrap=document.getElementById('iw'+idx);
+    // Only first box is drawable initially
+    if(idx===0){
+      initDraw(canvas,iL,idx,'iph'+idx,'iclr'+idx);
+      // Expand on first touch/click
+      wrap.addEventListener('click',function(){
+        if(!wrap.classList.contains('expanded')&&iL[0].length===0){
+          expandInitial(0);
+        }
+      },{once:true});
+    }
+  };}(i),0);
+});}
+
+function expandInitial(idx){
+  var wrap=document.getElementById('iw'+idx);
+  wrap.classList.add('expanded');
+  // Resize canvas to match expanded size
+  var canvas=document.getElementById('ic'+idx);
+  canvas.width=560;canvas.height=320;
+  // Re-init drawing
+  iL[idx]=[];
+  initDraw(canvas,iL,idx,'iph'+idx,'iclr'+idx);
+  document.getElementById('iph'+idx).style.display='none';
+  // Show done button
+  document.getElementById('idone'+idx).classList.add('vis');
+  // Scroll into view
+  wrap.scrollIntoView({behavior:'smooth',block:'center'});
+}
+
+function doneInitial(idx){
+  var wrap=document.getElementById('iw'+idx);
+  var canvas=document.getElementById('ic'+idx);
+  if(iL[idx].length===0)return;// nothing drawn
+  // Capture the drawn image
+  var imgData=canvas.toDataURL('image/png');
+  // Shrink back
+  wrap.classList.remove('expanded');
+  canvas.width=180;canvas.height=112;
+  // Redraw at small size
+  var img=new Image();
+  img.onload=function(){
+    var ctx=canvas.getContext('2d');
+    ctx.clearRect(0,0,180,112);
+    ctx.drawImage(img,0,0,180,112);
+  };
+  img.src=imgData;
+  // Hide done button
+  document.getElementById('idone'+idx).classList.remove('vis');
+  document.getElementById('iclr'+idx).classList.add('vis');
+  document.getElementById('iph'+idx).style.display='none';
+  // Copy to all other initial boxes
+  for(var i=0;i<11;i++){
+    if(i===idx)continue;
+    iL[i]=JSON.parse(JSON.stringify(iL[idx]));// copy line data
+    var otherCanvas=document.getElementById('ic'+i);
+    var otherImg=new Image();
+    otherImg.onload=(function(cv){return function(){
+      var ctx2=cv.getContext('2d');
+      ctx2.clearRect(0,0,cv.width,cv.height);
+      ctx2.drawImage(this,0,0,cv.width,cv.height);
+    };})(otherCanvas);
+    otherImg.src=imgData;
+    document.getElementById('iph'+i).style.display='none';
+    document.getElementById('iclr'+i).classList.add('vis');
+  }
+  sync();
+}
+
+// Override clrInit to handle the copy-all state
+var _origClrInit=clrInit;
+clrInit=function(i){
+  iL[i]=[];var c=document.getElementById('ic'+i);
+  c.width=180;c.height=112;// reset size
+  c.getContext('2d').clearRect(0,0,c.width,c.height);
+  document.getElementById('iph'+i).style.display='';
+  document.getElementById('iclr'+i).classList.remove('vis');
+  document.getElementById('idone'+i).classList.remove('vis');
+  var wrap=document.getElementById('iw'+i);
+  wrap.classList.remove('expanded');
+  // If clearing the first one, re-enable expand
+  if(i===0){
+    initDraw(c,iL,0,'iph0','iclr0');
+    wrap.addEventListener('click',function(){
+      if(!wrap.classList.contains('expanded')&&iL[0].length===0){expandInitial(0);}
+    },{once:true});
+  }
+  sync();
+};
 
 // Toggle handler - JS driven for maximum compatibility
 function setupToggles(){
@@ -367,22 +465,48 @@ document.addEventListener('DOMContentLoaded',function(){
   // Set FNA default toggle visual
   var ffa=document.getElementById('fFA');
   if(ffa&&ffa.parentElement){ffa.parentElement.querySelector('.tgl-t').classList.add('on');ffa.parentElement.querySelector('.tgl-k').classList.add('on');}
-  // Sig pads
+  // Sig pads - with expand on tap, shrink when done
   var cc=document.getElementById('cS');cc.width=480;cc.height=240;
   var ac=document.getElementById('aS');ac.width=480;ac.height=240;
+  
+  // Expand sig pad on first tap
+  function setupSigExpand(wrapId,canvasId,phId){
+    var wrap=document.getElementById(wrapId).closest('.sig-wrap');
+    wrap.addEventListener('click',function expandHandler(){
+      if(!wrap.classList.contains('expanded')){
+        wrap.classList.add('expanded');
+        wrap.scrollIntoView({behavior:'smooth',block:'center'});
+      }
+    });
+  }
+  setupSigExpand('cS','cS','cSP');
+  setupSigExpand('aS','aS','aSP');
+  
+  // Client sig
   (function(cv){var ctx=cv.getContext('2d');var on=false,cur=[];
     function p(e){var r=cv.getBoundingClientRect(),sx=cv.width/r.width,sy=cv.height/r.height;var cx=e.touches?e.touches[0].clientX:e.clientX,cy=e.touches?e.touches[0].clientY:e.clientY;return{x:(cx-r.left)*sx,y:(cy-r.top)*sy};}
     function d(){ctx.clearRect(0,0,cv.width,cv.height);ctx.strokeStyle='#000';ctx.lineWidth=2;ctx.lineCap='round';ctx.lineJoin='round';var all=cL.concat(cur.length>1?[cur]:[]);for(var i=0;i<all.length;i++){var l=all[i];if(l.length<2)continue;ctx.beginPath();ctx.moveTo(l[0].x,l[0].y);for(var k=1;k<l.length;k++)ctx.lineTo(l[k].x,l[k].y);ctx.stroke();}}
     function s(e){e.preventDefault();on=true;cur=[p(e)];}function m(e){if(!on)return;e.preventDefault();cur.push(p(e));d();}
-    function u(){if(!on)return;on=false;if(cur.length>0){cL.push(cur.slice());cur=[];}d();document.getElementById('cSP').style.display=cL.length>0?'none':'';document.getElementById('cSX').classList.toggle('vis',cL.length>0);sync();}
+    function u(){if(!on)return;on=false;if(cur.length>0){cL.push(cur.slice());cur=[];}d();document.getElementById('cSP').style.display=cL.length>0?'none':'';document.getElementById('cSX').classList.toggle('vis',cL.length>0);
+      // Shrink after a pause of no drawing
+      var wrap=cv.closest('.sig-wrap');
+      clearTimeout(wrap._shrinkTimer);
+      wrap._shrinkTimer=setTimeout(function(){if(cL.length>0)wrap.classList.remove('expanded');},1500);
+      sync();}
     cv.addEventListener('mousedown',s);cv.addEventListener('mousemove',m);cv.addEventListener('mouseup',u);cv.addEventListener('mouseleave',u);
     cv.addEventListener('touchstart',s,{passive:false});cv.addEventListener('touchmove',m,{passive:false});cv.addEventListener('touchend',u);
   })(cc);
+  // Advisor sig
   (function(cv){var ctx=cv.getContext('2d');var on=false,cur=[];
     function p(e){var r=cv.getBoundingClientRect(),sx=cv.width/r.width,sy=cv.height/r.height;var cx=e.touches?e.touches[0].clientX:e.clientX,cy=e.touches?e.touches[0].clientY:e.clientY;return{x:(cx-r.left)*sx,y:(cy-r.top)*sy};}
     function d(){ctx.clearRect(0,0,cv.width,cv.height);ctx.strokeStyle='#000';ctx.lineWidth=2;ctx.lineCap='round';ctx.lineJoin='round';var all=aL.concat(cur.length>1?[cur]:[]);for(var i=0;i<all.length;i++){var l=all[i];if(l.length<2)continue;ctx.beginPath();ctx.moveTo(l[0].x,l[0].y);for(var k=1;k<l.length;k++)ctx.lineTo(l[k].x,l[k].y);ctx.stroke();}}
     function s(e){e.preventDefault();on=true;cur=[p(e)];}function m(e){if(!on)return;e.preventDefault();cur.push(p(e));d();}
-    function u(){if(!on)return;on=false;if(cur.length>0){aL.push(cur.slice());cur=[];}d();document.getElementById('aSP').style.display=aL.length>0?'none':'';document.getElementById('aSX').classList.toggle('vis',aL.length>0);sync();}
+    function u(){if(!on)return;on=false;if(cur.length>0){aL.push(cur.slice());cur=[];}d();document.getElementById('aSP').style.display=aL.length>0?'none':'';document.getElementById('aSX').classList.toggle('vis',aL.length>0);
+      // Shrink after a pause
+      var wrap=cv.closest('.sig-wrap');
+      clearTimeout(wrap._shrinkTimer);
+      wrap._shrinkTimer=setTimeout(function(){if(aL.length>0)wrap.classList.remove('expanded');},1500);
+      sync();}
     cv.addEventListener('mousedown',s);cv.addEventListener('mousemove',m);cv.addEventListener('mouseup',u);cv.addEventListener('mouseleave',u);
     cv.addEventListener('touchstart',s,{passive:false});cv.addEventListener('touchmove',m,{passive:false});cv.addEventListener('touchend',u);
   })(ac);
