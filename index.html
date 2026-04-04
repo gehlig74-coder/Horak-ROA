@@ -290,100 +290,86 @@ function clrSig(t){
 function buildNeeds(){var c=document.getElementById('nC');NEEDS.forEach(function(lb,i){var o=lb.indexOf('OTHER')>=0;var r=document.createElement('div');r.className='n-row';r.innerHTML='<div class="nc-p"><input class="n-inp" id="np'+i+'" maxlength="2"></div><div class="nc-l">'+lb+'</div><div class="nc-s"><label class="mtgl"><input type="checkbox" id="ns'+i+'"><div class="tgl-t"></div><div class="tgl-k"></div></label></div>'+(o?'<div style="width:156px"></div>':'<div class="nc-d"><input class="n-inp" id="nd'+i+'" placeholder="0" inputmode="decimal"></div><div class="nc-r"><input class="n-inp" id="nr'+i+'" placeholder="0" inputmode="decimal"></div>')+'<div class="nc-f"><label class="mtgl"><input type="checkbox" id="nf'+i+'"><div class="tgl-t"></div><div class="tgl-k"></div></label></div>';c.appendChild(r);});}
 function buildProds(){var c=document.getElementById('pDC');for(var i=0;i<5;i++){var r=document.createElement('div');r.className='p-row';r.innerHTML='<input class="p-inp nm" id="pd'+i+'" placeholder="Product / Fund" oninput="sync()"><input class="p-inp mo" id="pm'+i+'" placeholder="Motivation (charges, affordability, track record...)">';c.appendChild(r);}}
 function buildDecl(){var c=document.getElementById('dC');DECL.forEach(function(t,i){iL[i]=[];var d=document.createElement('div');d.className='d-item';
-  var phText=i===0?'Tap to initial (applies to all)':'';
-  d.innerHTML='<div class="d-txt"><span class="d-num">'+(i+1)+'.</span> <span class="d-con">'+t+'</span></div><div class="ib"><div class="ib-wrap" id="iw'+i+'"><canvas id="ic'+i+'" width="180" height="112"></canvas><div class="ib-ph" id="iph'+i+'"><div class="i">✍️</div><div class="t">'+(i===0?'Tap to initial':'Initial here')+'</div></div></div><button class="ib-done-btn" id="idone'+i+'" onclick="doneInitial('+i+')">✓ Done — Apply to All</button><button class="ib-clr" id="iclr'+i+'" onclick="clrInit('+i+')">Clear</button></div>';
+  d.innerHTML='<div class="d-txt"><span class="d-num">'+(i+1)+'.</span> <span class="d-con">'+t+'</span></div><div class="ib"><div class="ib-wrap" id="iw'+i+'" onclick="openInitialPad('+i+')"><canvas id="ic'+i+'" width="180" height="112"></canvas><div class="ib-ph" id="iph'+i+'"><div class="i">✍️</div><div class="t">'+(i===0?'Tap to initial':'Initial')+'</div></div></div><button class="ib-clr" id="iclr'+i+'" onclick="event.stopPropagation();clrInitBox('+i+')">Clear</button></div>';
   c.appendChild(d);
-  setTimeout(function(idx){return function(){
-    var canvas=document.getElementById('ic'+idx);
-    var wrap=document.getElementById('iw'+idx);
-    // Only first box is drawable initially
-    if(idx===0){
-      initDraw(canvas,iL,idx,'iph'+idx,'iclr'+idx);
-      // Expand on first touch/click
-      wrap.addEventListener('click',function(){
-        if(!wrap.classList.contains('expanded')&&iL[0].length===0){
-          expandInitial(0);
-        }
-      },{once:true});
-    }
-  };}(i),0);
 });}
 
-function expandInitial(idx){
-  var wrap=document.getElementById('iw'+idx);
-  wrap.classList.add('expanded');
-  // Resize canvas to match expanded size
-  var canvas=document.getElementById('ic'+idx);
-  canvas.width=560;canvas.height=320;
-  // Re-init drawing
-  iL[idx]=[];
-  initDraw(canvas,iL,idx,'iph'+idx,'iclr'+idx);
-  document.getElementById('iph'+idx).style.display='none';
-  // Show done button
-  document.getElementById('idone'+idx).classList.add('vis');
-  // Scroll into view
-  wrap.scrollIntoView({behavior:'smooth',block:'center'});
+// Modal initial pad
+function openInitialPad(idx){
+  // Only allow initialling on box 0 (others get auto-filled)
+  // But if box 0 is already done, allow tapping any box to re-do
+  if(idx!==0&&iL[0].length===0){
+    // Redirect to box 0
+    idx=0;
+    document.getElementById('iw0').scrollIntoView({behavior:'smooth',block:'center'});
+  }
+  if(idx!==0)return;// only first box opens the pad
+  
+  var overlay=document.getElementById('initOverlay');
+  if(!overlay){
+    overlay=document.createElement('div');
+    overlay.id='initOverlay';
+    overlay.style.cssText='position:fixed;top:0;left:0;right:0;bottom:0;z-index:9999;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;';
+    overlay.innerHTML='<div style="background:#fff;border-radius:16px;padding:20px;width:90%;max-width:500px;box-shadow:0 10px 40px rgba(0,0,0,0.3);"><div style="text-align:center;font-size:14px;font-weight:600;color:#143F8C;margin-bottom:12px;">Sign your initials below</div><div style="border:2px solid #143F8C;border-radius:10px;overflow:hidden;touch-action:none;background:#fff;"><canvas id="initPadCanvas" width="800" height="400" style="width:100%;height:200px;display:block;cursor:crosshair;"></canvas></div><div style="display:flex;gap:10px;margin-top:14px;justify-content:center;"><button onclick="clearInitPad()" style="padding:10px 24px;border:1px solid #ddd;border-radius:8px;background:#fff;font-size:14px;cursor:pointer;font-family:var(--font);">Clear</button><button onclick="applyInitials()" style="padding:10px 32px;border:none;border-radius:8px;background:#34c759;color:#fff;font-size:14px;font-weight:600;cursor:pointer;font-family:var(--font);">✓ Done — Apply to All</button></div><button onclick="closeInitPad()" style="display:block;margin:10px auto 0;padding:6px 16px;border:none;background:transparent;color:#888;font-size:12px;cursor:pointer;font-family:var(--font);">Cancel</button></div>';
+    document.body.appendChild(overlay);
+    // Init drawing on the pad canvas
+    var padCanvas=document.getElementById('initPadCanvas');
+    var padCtx=padCanvas.getContext('2d');
+    var padLines=[];var padOn=false,padCur=[];
+    window._padLines=padLines;
+    function pp(e){var r=padCanvas.getBoundingClientRect(),sx=padCanvas.width/r.width,sy=padCanvas.height/r.height;var cx=e.touches?e.touches[0].clientX:e.clientX,cy=e.touches?e.touches[0].clientY:e.clientY;return{x:(cx-r.left)*sx,y:(cy-r.top)*sy};}
+    function pd(){padCtx.clearRect(0,0,padCanvas.width,padCanvas.height);padCtx.strokeStyle='#000';padCtx.lineWidth=3;padCtx.lineCap='round';padCtx.lineJoin='round';var all=padLines.concat(padCur.length>1?[padCur]:[]);for(var i=0;i<all.length;i++){var l=all[i];if(l.length<2)continue;padCtx.beginPath();padCtx.moveTo(l[0].x,l[0].y);for(var k=1;k<l.length;k++)padCtx.lineTo(l[k].x,l[k].y);padCtx.stroke();}}
+    function ps(e){e.preventDefault();padOn=true;padCur=[pp(e)];}
+    function pm(e){if(!padOn)return;e.preventDefault();padCur.push(pp(e));pd();}
+    function pu(){if(!padOn)return;padOn=false;if(padCur.length>0){padLines.push(padCur.slice());padCur=[];}pd();}
+    padCanvas.addEventListener('mousedown',ps);padCanvas.addEventListener('mousemove',pm);padCanvas.addEventListener('mouseup',pu);padCanvas.addEventListener('mouseleave',pu);
+    padCanvas.addEventListener('touchstart',ps,{passive:false});padCanvas.addEventListener('touchmove',pm,{passive:false});padCanvas.addEventListener('touchend',pu);
+  }else{
+    overlay.style.display='flex';
+  }
+  // Clear pad
+  clearInitPad();
 }
 
-function doneInitial(idx){
-  var wrap=document.getElementById('iw'+idx);
-  var canvas=document.getElementById('ic'+idx);
-  if(iL[idx].length===0)return;// nothing drawn
-  // Capture the drawn image
-  var imgData=canvas.toDataURL('image/png');
-  // Shrink back
-  wrap.classList.remove('expanded');
-  canvas.width=180;canvas.height=112;
-  // Redraw at small size
-  var img=new Image();
-  img.onload=function(){
-    var ctx=canvas.getContext('2d');
-    ctx.clearRect(0,0,180,112);
-    ctx.drawImage(img,0,0,180,112);
-  };
-  img.src=imgData;
-  // Hide done button
-  document.getElementById('idone'+idx).classList.remove('vis');
-  document.getElementById('iclr'+idx).classList.add('vis');
-  document.getElementById('iph'+idx).style.display='none';
-  // Copy to all other initial boxes
+function clearInitPad(){
+  var c=document.getElementById('initPadCanvas');
+  if(c){c.getContext('2d').clearRect(0,0,c.width,c.height);}
+  if(window._padLines)window._padLines.length=0;
+}
+
+function closeInitPad(){
+  document.getElementById('initOverlay').style.display='none';
+}
+
+function applyInitials(){
+  var padCanvas=document.getElementById('initPadCanvas');
+  if(!window._padLines||window._padLines.length===0)return;
+  var imgData=padCanvas.toDataURL('image/png');
+  // Apply to ALL 11 boxes
   for(var i=0;i<11;i++){
-    if(i===idx)continue;
-    iL[i]=JSON.parse(JSON.stringify(iL[idx]));// copy line data
-    var otherCanvas=document.getElementById('ic'+i);
-    var otherImg=new Image();
-    otherImg.onload=(function(cv){return function(){
-      var ctx2=cv.getContext('2d');
-      ctx2.clearRect(0,0,cv.width,cv.height);
-      ctx2.drawImage(this,0,0,cv.width,cv.height);
-    };})(otherCanvas);
-    otherImg.src=imgData;
+    iL[i]=[['done']];// mark as filled
+    var box=document.getElementById('ic'+i);
+    var img=new Image();
+    img.onload=(function(cv){return function(){
+      var ctx=cv.getContext('2d');
+      ctx.clearRect(0,0,cv.width,cv.height);
+      ctx.drawImage(this,0,0,cv.width,cv.height);
+    };})(box);
+    img.src=imgData;
     document.getElementById('iph'+i).style.display='none';
     document.getElementById('iclr'+i).classList.add('vis');
   }
+  closeInitPad();
   sync();
 }
 
-// Override clrInit to handle the copy-all state
-var _origClrInit=clrInit;
-clrInit=function(i){
+function clrInitBox(i){
   iL[i]=[];var c=document.getElementById('ic'+i);
-  c.width=180;c.height=112;// reset size
   c.getContext('2d').clearRect(0,0,c.width,c.height);
   document.getElementById('iph'+i).style.display='';
   document.getElementById('iclr'+i).classList.remove('vis');
-  document.getElementById('idone'+i).classList.remove('vis');
-  var wrap=document.getElementById('iw'+i);
-  wrap.classList.remove('expanded');
-  // If clearing the first one, re-enable expand
-  if(i===0){
-    initDraw(c,iL,0,'iph0','iclr0');
-    wrap.addEventListener('click',function(){
-      if(!wrap.classList.contains('expanded')&&iL[0].length===0){expandInitial(0);}
-    },{once:true});
-  }
   sync();
-};
+}
 
 // Toggle handler - JS driven for maximum compatibility
 function setupToggles(){
@@ -445,7 +431,7 @@ function clearAll(){
   NEEDS.forEach(function(_,i){['np','ns','nd','nr','nf'].forEach(function(p){var e=document.getElementById(p+i);if(e){if(e.type==='checkbox')e.checked=false;else e.value='';}});});
   for(var i=0;i<3;i++)document.getElementById('pc'+i).value='';
   for(var i=0;i<5;i++){document.getElementById('pd'+i).value='';document.getElementById('pm'+i).value='';}
-  for(var i=0;i<11;i++)clrInit(i);clrSig('c');clrSig('a');
+  for(var i=0;i<11;i++)clrInitBox(i);clrSig('c');clrSig('a');
   var td=new Date().toISOString().split('T')[0];document.getElementById('fCD').value=td;document.getElementById('fAD').value=td;
   // Reset all toggle visuals
   document.querySelectorAll('.tgl-t,.tgl-k').forEach(function(el){el.classList.remove('on');});
